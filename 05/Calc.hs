@@ -1,4 +1,4 @@
-{-# LANGUAGE FlexibleInstances #-}
+{-# LANGUAGE FlexibleInstances, ScopedTypeVariables #-}
 -- {-# LANGUAGE TypeSynonymInstances #-}
 
 module Calc where
@@ -7,6 +7,9 @@ import ExprT
 import Parser (parseExp)
 import StackVM hiding (Add, Mul)
 import qualified StackVM (StackExp(Add), StackExp(Mul))
+import qualified Data.Map as M
+import VarExprT (VarExprT)
+import qualified VarExprT as VET hiding (VarExprT)
 
 -- Exercise 1
 eval :: ExprT -> Integer
@@ -90,5 +93,39 @@ instance Expr Program where
 testProgram :: Maybe Program
 testProgram = testExp :: Maybe Program
 
+-- Exercise 5
 compile :: String -> Maybe Program
 compile s = parseExp lit add mul s
+
+-- Exercise 6
+class HasVars a where
+    var :: String -> a
+
+instance HasVars VarExprT where
+    var s = VET.Var s
+
+instance Expr VarExprT where
+    mul = VET.Mul
+    lit = VET.Lit
+    add = VET.Add
+
+instance HasVars (M.Map String Integer -> Maybe Integer) where
+    var = M.lookup
+
+binaryOp :: (Integer -> Integer -> Integer)
+         -> (M.Map String Integer -> Maybe Integer)
+         -> (M.Map String Integer -> Maybe Integer)
+         -> (M.Map String Integer -> Maybe Integer)
+binaryOp f x y = (\m -> case (x m, y m) of
+            (Just a, Just b) -> Just (a `f` b)
+            _ -> Nothing)
+
+instance Expr (M.Map String Integer -> Maybe Integer) where
+    mul = binaryOp (*)
+    lit x = (\_ -> Just x)
+    add = binaryOp (+)
+
+withVars :: [(String, Integer)]
+         -> (M.Map String Integer -> Maybe Integer)
+         -> Maybe Integer
+withVars vs exp = exp $ M.fromList vs
