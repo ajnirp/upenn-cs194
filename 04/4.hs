@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wall #-}
+
 foldl' :: (a -> b -> a) -> a -> [b] -> a
 foldl' f z [] = z
 foldl' f z (x:xs) = let z' = f z x in seq z' $ foldl' f z' xs
