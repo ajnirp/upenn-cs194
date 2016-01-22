@@ -1,8 +1,12 @@
-{-# OPTIONS_GHC -Wall #-}
+{-# LANGUAGE FlexibleInstances #-}
+-- {-# LANGUAGE TypeSynonymInstances #-}
+
 module Calc where
 
 import ExprT
 import Parser (parseExp)
+import StackVM hiding (Add, Mul)
+import qualified StackVM (StackExp(Add), StackExp(Mul))
 
 -- Exercise 1
 eval :: ExprT -> Integer
@@ -77,3 +81,14 @@ testMM = testExp :: Maybe MinMax
 testSat :: Maybe Mod7
 testSat = testExp :: Maybe Mod7
 
+-- Exercise 5
+instance Expr Program where
+    mul x y = x ++ y ++ [StackVM.Mul]
+    lit x = [PushI x]
+    add x y = x ++ y ++ [StackVM.Add]
+
+testProgram :: Maybe Program
+testProgram = testExp :: Maybe Program
+
+compile :: String -> Maybe Program
+compile s = parseExp lit add mul s
