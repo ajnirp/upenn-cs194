@@ -81,8 +81,8 @@ fibs3 = x / (1 - x - (x * x))
 type Matrix = (Integer, Integer, Integer, Integer)
 
 instance Num Matrix where
-    (*) (a, b, c, d) (a', b', c', d') = (a*a' + b*c', a*b' + b*d', c*a' + d*c', c*b' + d*d')
-    (+) (a, b, c, d) (a', b', c', d') = (a+a', b+b', c+c', d+d')
+    (a, b, c, d) * (a', b', c', d') = (a*a' + b*c', a*b' + b*d', c*a' + d*c', c*b' + d*d')
+    (a, b, c, d) + (a', b', c', d') = (a+a', b+b', c+c', d+d')
     negate (a, b, c, d) = (-a, -b, -c, -d)
 
 f :: Matrix
