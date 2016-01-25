@@ -1,4 +1,4 @@
-{-# LANGUAGE InstanceSigs #-}
+{-# LANGUAGE DataKinds, InstanceSigs #-}
 
 {- CIS 194 HW 10
    due Monday, 1 April
@@ -64,18 +64,39 @@ first :: (a -> b) -> (a, c) -> (b, c)
 first f (x, y) = (f x, y)
 
 instance Functor Parser where
-  fmap :: (a -> b) -> Parser a -> Parser b
   fmap f (Parser p) = Parser $ \s -> (first f) <$> (p s)
 
 -- Exercise 2
 instance Applicative Parser where
-  --pure :: a -> Parser a
-  --pure s = Parser f
-  --  where f :: String -> Maybe (a, String)
-  --        f s = Just (mempty :: a, s)
-  (<*>) :: Parser (a -> b) -> Parser a -> Parser b
-  Parser f <*> Parser x = Parser (f x)
+  pure s = Parser $ \t -> Just (s, t)
+  p1 <*> p2 = Parser $ \s -> case f s of
+    Nothing      -> Nothing
+    Just (x, t) -> case p t of
+      Nothing      -> Nothing
+      Just (y, u) -> Just (x y, u)
+    where f = runParser p1
+          p = runParser p2
 
----- Exercise 3
---abParser :: Parser (Char, Char)
---abParser = (char 'a') <*> (char 'b')
+-- Exercise 3
+abParser :: Parser (Char, Char)
+abParser = joinChars <$> char 'a' <*> char 'b'
+  where joinChars c1 c2 = (c1, c2)
+
+abParser_ :: Parser ()
+abParser_ = discard <$> char 'a' <*> char 'b'
+  where discard _ _ = ()
+
+intPair :: Parser (Integer, Integer)
+intPair = (\i1 _ i2 -> (i1, i2)) <$> posInt <*> (char ' ') <*> posInt
+
+-- Exercise 4
+instance Alternative Parser where
+  empty = Parser $ \_ -> Nothing
+  Parser { runParser = f1 } <|> Parser { runParser = f2 } = Parser $ \s -> f1 s <|> f2 s
+
+-- Exercise 5
+intOrUppercase :: Parser ()
+intOrUppercase = posInt_ <|> isUpper_
+  where discard _ = ()
+        posInt_ = discard <$> posInt
+        isUpper_ = discard <$> satisfy isUpper
