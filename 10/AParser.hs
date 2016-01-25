@@ -1,12 +1,13 @@
+{-# LANGUAGE InstanceSigs #-}
+
 {- CIS 194 HW 10
    due Monday, 1 April
 -}
 
 module AParser where
 
-import           Control.Applicative
-
-import           Data.Char
+import Control.Applicative
+import Data.Char
 
 -- A parser for a value of type a is a function which takes a String
 -- represnting the input to be parsed, and succeeds or fails; if it
@@ -57,3 +58,24 @@ posInt = Parser f
 ------------------------------------------------------------
 -- Your code goes below here
 ------------------------------------------------------------
+
+-- Exercise 1
+first :: (a -> b) -> (a, c) -> (b, c)
+first f (x, y) = (f x, y)
+
+instance Functor Parser where
+  fmap :: (a -> b) -> Parser a -> Parser b
+  fmap f (Parser p) = Parser $ \s -> (first f) <$> (p s)
+
+-- Exercise 2
+instance Applicative Parser where
+  --pure :: a -> Parser a
+  --pure s = Parser f
+  --  where f :: String -> Maybe (a, String)
+  --        f s = Just (mempty :: a, s)
+  (<*>) :: Parser (a -> b) -> Parser a -> Parser b
+  Parser f <*> Parser x = Parser (f x)
+
+---- Exercise 3
+--abParser :: Parser (Char, Char)
+--abParser = (char 'a') <*> (char 'b')
