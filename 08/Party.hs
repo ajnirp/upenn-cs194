@@ -2,9 +2,11 @@
 
 module Party where
 
+import Data.List
 import Data.Monoid
 import Data.Tree
 import Employee
+import Text.Printf
 
 -- Exercise 1
 glCons :: Employee -> GuestList -> GuestList
@@ -13,9 +15,7 @@ glCons e@(Emp { empFun = f }) (GL es totalf) = GL (e:es) (f + totalf)
 instance Monoid GuestList where
     mempty = GL [] 0
     mappend (GL [] _) g = g
-    mappend (GL (e:es) _) g = mappend (GL es 0) $ glCons e g
-    -- note: the total_fun value for constructing the first argument to mappend
-    --       in the RHS above is not important, I just arbitrarily chose 0
+    mappend (GL (e:es) f) g = mappend (GL es f) $ glCons e g
 
 moreFun :: GuestList -> GuestList -> GuestList
 moreFun g1@(GL _ f1) g2@(GL _ f2) = if f1 < f2 then g1 else g2
@@ -38,12 +38,20 @@ maxFun t = moreFun x y
           empty = mempty :: GuestList
 
 -- Exercise 5
---getFun :: GuestList -> Fun
---getFun (GL _ f) = f
+printGL :: GuestList -> IO ()
+printGL g = printGLFun g >> printGLEmp g
+    where printGLFun :: GuestList -> IO ()
+          printGLFun (GL _ f) = putStr "Total fun: " >> printf "%d\n" f
+          printGLEmp :: GuestList -> IO ()
+          printGLEmp (GL [] _) = putStr ""
+          printGLEmp (GL (e:es) f) = (putStrLn . empName) e >> printGLEmp (GL es f)
 
---readEmp :: String -> Tree Employee
---readEmp s = read s :: Tree Employee
+instance Ord Employee where
+    compare e1 e2 = compare (empName e1) (empName e2)
 
---main :: IO ()
----- main = readFile "company.txt" >>= putStrLn
---main = readFile "company.txt" >>= (readEmp >>= (maxFun >>= (getFun >>= putStrLn)))
+main :: IO ()
+main = readFile "company.txt" >>= (printGL . sortEmps . maxFun . readEmp)
+    where readEmp :: String -> Tree Employee
+          readEmp s = read s :: Tree Employee
+          sortEmps :: GuestList -> GuestList
+          sortEmps (GL es f) = GL (sort es) f
