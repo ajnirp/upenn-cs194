@@ -1,7 +1,7 @@
 module AParser (Parser, runParser, satisfy, char, posInt) where
 
-import           Control.Applicative
-import           Data.Char
+import Control.Applicative
+import Data.Char
 
 newtype Parser a = Parser { runParser :: String -> Maybe (a, String) }
 
