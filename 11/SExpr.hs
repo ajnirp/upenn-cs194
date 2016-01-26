@@ -12,8 +12,8 @@ import Data.Char
 --  1. Parsing repetitions
 ------------------------------------------------------------
 
--- zeroOrMore :: Parser a -> Parser [a]
--- zeroOrMore p = (:) <$> p <*> zeroOrMore p
+zeroOrMore :: Parser a -> Parser [a]
+zeroOrMore p = oneOrMore p <|> pure []
 
 oneOrMore :: Parser a -> Parser [a]
 oneOrMore p = (:) <$> p <*> zeroOrMore p
@@ -26,7 +26,9 @@ spaces :: Parser String
 spaces = zeroOrMore $ satisfy isSpace
 
 ident :: Parser String
-ident = undefined
+ident = (:) <$> alpha <*> alphaNum
+    where alpha = satisfy isAlpha
+          alphaNum = zeroOrMore $ satisfy isAlphaNum
 
 ------------------------------------------------------------
 --  3. Parsing S-expressions
@@ -45,3 +47,16 @@ data Atom = N Integer | I Ident
 data SExpr = A Atom
            | Comb [SExpr]
   deriving Show
+
+atom :: Parser Atom
+atom = (N <$> posInt) <|> (I <$> ident)
+
+sExprHelper :: Parser SExpr
+sExprHelper = (A <$> atom) <|>
+              (\_ xs _ -> Comb xs) <$>
+              char '(' <*>
+              oneOrMore sExpr <*>
+              char ')'
+
+sExpr :: Parser SExpr
+sExpr = spaces *> sExprHelper <* spaces

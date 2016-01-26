@@ -92,7 +92,7 @@ intPair = (\i1 _ i2 -> (i1, i2)) <$> posInt <*> (char ' ') <*> posInt
 -- Exercise 4
 instance Alternative Parser where
   empty = Parser $ \_ -> Nothing
-  Parser { runParser = f1 } <|> Parser { runParser = f2 } = Parser $ \s -> f1 s <|> f2 s
+  Parser f1 <|> Parser f2 = Parser $ \s -> f1 s <|> f2 s
 
 -- Exercise 5
 intOrUppercase :: Parser ()
